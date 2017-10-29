@@ -30,7 +30,7 @@ extension Timer {
     
     /// Create and schedule a timer that will call `block` once after the specified time.
     
-    @discardableResult
+    @objc @discardableResult
     public class func after(_ interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
         let timer = Timer.new(after: interval, block)
         timer.start()
@@ -39,7 +39,7 @@ extension Timer {
     
     /// Create and schedule a timer that will call `block` repeatedly in specified time intervals.
     
-    @discardableResult
+    @objc @discardableResult
     public class func every(_ interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
         let timer = Timer.new(every: interval, block)
         timer.start()
@@ -64,7 +64,7 @@ extension Timer {
     ///         Use `NSTimer.after` to create and schedule a timer in one step.
     /// - Note: The `new` class function is a workaround for a crashing bug when using convenience initializers (rdar://18720947)
 
-    public class func new(after interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
+    @objc public class func new(after interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
         return CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + interval, 0, 0, 0) { _ in
             block()
         }
@@ -76,7 +76,7 @@ extension Timer {
     ///         Use `NSTimer.every` to create and schedule a timer in one step.
     /// - Note: The `new` class function is a workaround for a crashing bug when using convenience initializers (rdar://18720947)
 
-    public class func new(every interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
+    @objc public class func new(every interval: TimeInterval, _ block: @escaping () -> Void) -> Timer {
         return CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + interval, interval, 0, 0) { _ in
             block()
         }

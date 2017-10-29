@@ -123,38 +123,38 @@ extension Int {
  * Notice: GCDAsyncSocket need delegate to extend NSObject
  */
 open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
-    open var host = "localhost"
-    open var port: UInt16 = 1883
-    open var clientID: String
-    open var username: String?
-    open var password: String?
-    open var secureMQTT = false
-    open var cleanSession = true
-    open var willMessage: CocoaMQTTWill?
-    open weak var delegate: CocoaMQTTDelegate?
-    open var backgroundOnSocket = false
+    @objc open var host = "localhost"
+    @objc open var port: UInt16 = 1883
+    @objc open var clientID: String
+    @objc open var username: String?
+    @objc open var password: String?
+    @objc open var secureMQTT = false
+    @objc open var cleanSession = true
+    @objc open var willMessage: CocoaMQTTWill?
+    @objc open weak var delegate: CocoaMQTTDelegate?
+    @objc open var backgroundOnSocket = false
     open var connState = CocoaMQTTConnState.initial
-    open var dispatchQueue = DispatchQueue.main
+    @objc open var dispatchQueue = DispatchQueue.main
     
     // flow control
     fileprivate var buffer = CocoaMQTTFrameBuffer()
-    open var bufferSilosTimeout: Double {
+    @objc open var bufferSilosTimeout: Double {
         get { return buffer.timeout }
         set { buffer.timeout = newValue }
     }
-    open var bufferSilosMaxNumber: UInt {
+    @objc open var bufferSilosMaxNumber: UInt {
         get { return buffer.silosMaxNumber }
         set { buffer.silosMaxNumber = newValue }
     }
     
     
     // heart beat
-    open var keepAlive: UInt16 = 60
+    @objc open var keepAlive: UInt16 = 60
     fileprivate var aliveTimer: Timer?
     
     // auto reconnect
-    open var autoReconnect = false
-    open var autoReconnectTimeInterval: UInt16 = 20
+    @objc open var autoReconnect = false
+    @objc open var autoReconnectTimeInterval: UInt16 = 20
     fileprivate var autoReconnTimer: Timer?
     fileprivate var disconnectExpectedly = false
     
@@ -169,9 +169,9 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
     }
     
     // ssl
-    open var enableSSL = false
-    open var sslSettings: [String: NSObject]?
-    open var allowUntrustCACertificate = false
+    @objc open var enableSSL = false
+    @objc open var sslSettings: [String: NSObject]?
+    @objc open var allowUntrustCACertificate = false
     
     // subscribed topics. (dictionary structure -> [msgid: [topicString: QoS]])
     open var subscriptions: [UInt16: [String: CocoaMQTTQOS]] = [:]
@@ -179,13 +179,13 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
     var unsubscriptionsWaitingAck: [UInt16: [String: CocoaMQTTQOS]] = [:]
 
     // global message id
-    var gmid: UInt16 = 1
-    var socket = GCDAsyncSocket()
+    @objc var gmid: UInt16 = 1
+    @objc var socket = GCDAsyncSocket()
     var reader: CocoaMQTTReader?
     
 
     // MARK: init
-    public init(clientID: String, host: String = "localhost", port: UInt16 = 1883) {
+    @objc public init(clientID: String, host: String = "localhost", port: UInt16 = 1883) {
         self.clientID = clientID
         self.host = host
         self.port = port
@@ -246,7 +246,7 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
         send(CocoaMQTTFramePubAck(type: type, msgid: msgid))
     }
 
-    @discardableResult
+    @objc @discardableResult
     open func connect() -> Bool {
         socket.setDelegate(self, delegateQueue: dispatchQueue)
         reader = CocoaMQTTReader(socket: socket, delegate: self)
@@ -262,30 +262,30 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
     
     /// Only can be called from outside. If you want to disconnect from inside framwork, call internal_disconnect()
     /// disconnect expectedly
-    open func disconnect() {
+    @objc open func disconnect() {
         disconnectExpectedly = true
         internal_disconnect()
     }
     
     /// disconnect unexpectedly
-    open func internal_disconnect() {
+    @objc open func internal_disconnect() {
         send(CocoaMQTTFrame(type: CocoaMQTTFrameType.disconnect), tag: -0xE0)
         socket.disconnect()
     }
     
-    open func ping() {
+    @objc open func ping() {
         printDebug("ping")
         send(CocoaMQTTFrame(type: CocoaMQTTFrameType.pingreq), tag: -0xC0)
         self.delegate?.mqttDidPing(self)
     }
 
-    @discardableResult
+    @objc @discardableResult
     open func publish(_ topic: String, withString string: String, qos: CocoaMQTTQOS = .qos1, retained: Bool = false, dup: Bool = false) -> UInt16 {
         let message = CocoaMQTTMessage(topic: topic, string: string, qos: qos, retained: retained, dup: dup)
         return publish(message)
     }
 
-    @discardableResult
+    @objc @discardableResult
     open func publish(_ message: CocoaMQTTMessage) -> UInt16 {
         let msgid: UInt16 = nextMessageID()
         let frame = CocoaMQTTFramePublish(msgid: msgid, topic: message.topic, payload: message.payload)
@@ -307,7 +307,7 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
         return msgid
     }
 
-    @discardableResult
+    @objc @discardableResult
     open func subscribe(_ topic: String, qos: CocoaMQTTQOS = .qos1) -> UInt16 {
         let msgid = nextMessageID()
         let frame = CocoaMQTTFrameSubscribe(msgid: msgid, topic: topic, reqos: qos.rawValue)
@@ -316,7 +316,7 @@ open class CocoaMQTT: NSObject, CocoaMQTTClient, CocoaMQTTFrameBufferProtocol {
         return msgid
     }
 
-    @discardableResult
+    @objc @discardableResult
     open func unsubscribe(_ topic: String) -> UInt16 {
         let msgid = nextMessageID()
         let frame = CocoaMQTTFrameUnsubscribe(msgid: msgid, topic: topic)
@@ -656,7 +656,7 @@ public enum CocoaMQTTLoggerLevel {
 public class CocoaMQTTLogger: NSObject {
     
     // Singleton
-    public static let logger = CocoaMQTTLogger()
+    @objc public static let logger = CocoaMQTTLogger()
     private override init() {}
     
     // min level
@@ -668,15 +668,15 @@ public class CocoaMQTTLogger: NSObject {
         print("CocoaMQTT(\(level)): \(message)")
     }
     
-    func debug(_ message: String) {
+    @objc func debug(_ message: String) {
         log(level: .debug, message: message)
     }
     
-    func warning(_ message: String) {
+    @objc func warning(_ message: String) {
         log(level: .warning, message: message)
     }
     
-    func error(_ message: String) {
+    @objc func error(_ message: String) {
         log(level: .error, message: message)
     }
     

@@ -429,15 +429,15 @@ open class CocoaMQTTFrameBuffer: NSObject {
     fileprivate var silos = [CocoaMQTTFramePublish]()
     fileprivate var buffer = [CocoaMQTTFramePublish]()
     fileprivate var bufferSize = 1000
-    var silosMaxNumber: UInt = 10
-    var timeout: Double = 60
+    @objc var silosMaxNumber: UInt = 10
+    @objc var timeout: Double = 60
     //TODO: bufferCapacity
     //fileprivate var bufferCapacity = 50.MB // unit: byte
     
     //
-    var isBufferEmpty: Bool { get { return buffer.count == 0 }}
-    var isBufferFull : Bool { get { return buffer.count > bufferSize }}
-    var isSilosFull  : Bool { get { return silos.count >= Int(silosMaxNumber) }}
+    @objc var isBufferEmpty: Bool { get { return buffer.count == 0 }}
+    @objc var isBufferFull : Bool { get { return buffer.count > bufferSize }}
+    @objc var isSilosFull  : Bool { get { return silos.count >= Int(silosMaxNumber) }}
     
     
     // return false means the frame is rejected because of the buffer is full
@@ -453,7 +453,7 @@ open class CocoaMQTTFrameBuffer: NSObject {
     }
     
     // try transport a frame from buffer to silo
-    func tryTransport() {
+    @objc func tryTransport() {
         if isBufferEmpty || isSilosFull { return }
         
         // take out the earliest frame
@@ -483,14 +483,14 @@ open class CocoaMQTTFrameBuffer: NSObject {
         delegate?.buffer(self, sendPublishFrame: frame)
     }
     
-    open func sendSuccess(withMsgid msgid: UInt16) {
+    @objc open func sendSuccess(withMsgid msgid: UInt16) {
         DispatchQueue.main.async { [weak self] in
             _ = self?.removeFrameFromSilos(withMsgid: msgid)
             printDebug("sendMessageSuccess:\(msgid)")
         }
     }
     
-    func removeFrameFromSilos(withMsgid msgid: UInt16) -> Bool {
+    @objc func removeFrameFromSilos(withMsgid msgid: UInt16) -> Bool {
         var success = false
         for (index, item) in silos.enumerated() {
             if item.msgid == msgid {
